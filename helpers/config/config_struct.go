@@ -68,6 +68,8 @@ type config struct {
 	VolumeServiceName         *string `json:"volume_service_name"`
 	VolumeServicePlanName     *string `json:"volume_service_plan_name"`
 	VolumeServiceCreateConfig *string `json:"volume_service_create_config"`
+	VolumeServiceBindConfig   *string `json:"volume_service_bind_config"`
+	VolumeServiceBrokerName   *string `json:"volume_service_broker_name"`
 
 	IncludeAppSyslogTCP             *bool `json:"include_app_syslog_tcp"`
 	IncludeApps                     *bool `json:"include_apps"`
@@ -114,7 +116,6 @@ type config struct {
 	PublicDockerAppImage          *string `json:"public_docker_app_image"`
 
 	UnallocatedIPForSecurityGroup *string `json:"unallocated_ip_for_security_group"`
-	RequireProxiedAppTraffic      *bool   `json:"require_proxied_app_traffic"`
 
 	DynamicASGsEnabled           *bool `json:"dynamic_asgs_enabled"`
 	CommaDelimitedASGsEnabled    *bool `json:"comma_delim_asgs_enabled"`
@@ -205,6 +206,8 @@ func getDefaults() config {
 	defaults.VolumeServiceName = ptrToString("")
 	defaults.VolumeServicePlanName = ptrToString("")
 	defaults.VolumeServiceCreateConfig = ptrToString("")
+	defaults.VolumeServiceBindConfig = ptrToString("")
+	defaults.VolumeServiceBrokerName = ptrToString("")
 
 	defaults.ReporterConfig = &reporterConfig{}
 
@@ -235,7 +238,6 @@ func getDefaults() config {
 	defaults.PublicDockerAppImage = ptrToString("cloudfoundry/diego-docker-app:latest")
 
 	defaults.UnallocatedIPForSecurityGroup = ptrToString("10.0.244.255")
-	defaults.RequireProxiedAppTraffic = ptrToBool(false)
 
 	defaults.DynamicASGsEnabled = ptrToBool(true)
 	defaults.CommaDelimitedASGsEnabled = ptrToBool(false)
@@ -1109,10 +1111,6 @@ func (c *config) GetUnallocatedIPForSecurityGroup() string {
 	return *c.UnallocatedIPForSecurityGroup
 }
 
-func (c *config) GetRequireProxiedAppTraffic() bool {
-	return *c.RequireProxiedAppTraffic
-}
-
 func (c *config) GetStacks() []string {
 	return *c.Stacks
 }
@@ -1139,6 +1137,14 @@ func (c *config) GetVolumeServicePlanName() string {
 
 func (c *config) GetVolumeServiceCreateConfig() string {
 	return *c.VolumeServiceCreateConfig
+}
+
+func (c *config) GetVolumeServiceBindConfig() string {
+	return *c.VolumeServiceBindConfig
+}
+
+func (c *config) GetVolumeServiceBrokerName() string {
+	return *c.VolumeServiceBrokerName
 }
 
 func (c *config) GetAdminClient() string {

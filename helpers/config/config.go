@@ -80,7 +80,6 @@ type CatsConfig interface {
 	GetRBuildpackName() string
 	GetRubyBuildpackName() string
 	GetUnallocatedIPForSecurityGroup() string
-	GetRequireProxiedAppTraffic() bool
 	GetDynamicASGsEnabled() bool
 	GetCommaDelimitedASGsEnabled() bool
 	GetReadinessHealthChecksEnabled() bool
@@ -95,6 +94,8 @@ type CatsConfig interface {
 	GetVolumeServiceName() string
 	GetVolumeServicePlanName() string
 	GetVolumeServiceCreateConfig() string
+	GetVolumeServiceBindConfig() string
+	GetVolumeServiceBrokerName() string
 
 	GetReporterConfig() reporterConfig
 

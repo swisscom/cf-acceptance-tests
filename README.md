@@ -164,8 +164,6 @@ include_app_syslog_tcp
 * `private_docker_registry_password`: Password to access the private docker repository. [See below](#private-docker)
 * `unallocated_ip_for_security_group`: An unused IP address in the private network used by CF. Defaults to 10.0.244.255. [See below](#container-networking-and-application-security-groups)
 
-* `require_proxied_app_traffic`: Set this to `true` if Diego was configured to require proxied port mappings, i.e. if `containers.proxy.enable_unproxied_port_mappings` is set to `false`.
-
 * `staticfile_buildpack_name` [See below](#buildpack-names)
 * `java_buildpack_name` [See below](#buildpack-names)
 * `ruby_buildpack_name` [See below](#buildpack-names)
@@ -188,6 +186,7 @@ include_app_syslog_tcp
 * `volume_service_name`: The name of the volume service provided by the volume service broker.
 * `volume_service_plan_name`: The name of the plan of the service provided by the volume service broker.
 * `volume_service_create_config`: The JSON configuration that is used when volume service is created.
+* `volume_service_bind_config`: The JSON configuration for the volume service binding configuration.
 
 #### Buildpack Names
 Many tests specify a buildpack when pushing an app, so that on diego the app staging process completes in less time. The default names for the buildpacks are as follows; if you have buildpacks with different names, you can override them by setting different names:
