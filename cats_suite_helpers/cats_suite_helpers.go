@@ -109,6 +109,29 @@ func CNBDescribe(description string, callback func()) bool {
 	})
 }
 
+const (
+	BuildpackLifecycle string = "buildpack"
+	CNBLifecycle              = "CNB"
+	DockerLifecycle           = "Docker"
+)
+
+func FileBasedServiceBindingsDescribe(description string, lifecycle string, callback func()) bool {
+	return Describe(fmt.Sprintf("[file-based service bindings]", lifecycle), func() {
+		BeforeEach(func() {
+			if lifecycle == BuildpackLifecycle && !Config.GetIncludeFileBasedServiceBindings() {
+				Skip(skip_messages.SkipFileBasedServiceBindingsBuildpackApp)
+			}
+			if lifecycle == CNBLifecycle && (!Config.GetIncludeFileBasedServiceBindings() || !Config.GetIncludeCNB()) {
+				Skip(skip_messages.SkipFileBasedServiceBindingsCnbApp)
+			}
+			if lifecycle == DockerLifecycle && (!Config.GetIncludeFileBasedServiceBindings() || !Config.GetIncludeDocker()) {
+				Skip(skip_messages.SkipFileBasedServiceBindingsDockerApp)
+			}
+		})
+		Describe(description, callback)
+	})
+}
+
 func InternetDependentDescribe(description string, callback func()) bool {
 	return Describe("[internet_dependent]", func() {
 		BeforeEach(func() {

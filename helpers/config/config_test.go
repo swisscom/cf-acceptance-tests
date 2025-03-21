@@ -42,6 +42,7 @@ type testConfig struct {
 	PrivateDockerRegistryUsername *string `json:"private_docker_registry_username,omitempty"`
 	PrivateDockerRegistryPassword *string `json:"private_docker_registry_password,omitempty"`
 	PublicDockerAppImage          *string `json:"public_docker_app_image,omitempty"`
+	CatnipDockerAppImage          *string `json:"catnip_docker_app_image,omitempty"`
 
 	IsolationSegmentName   *string `json:"isolation_segment_name,omitempty"`
 	IsolationSegmentDomain *string `json:"isolation_segment_domain,omitempty"`
@@ -65,6 +66,7 @@ type testConfig struct {
 	IncludeDeployments              *bool `json:"include_deployments,omitempty"`
 	IncludeDetect                   *bool `json:"include_detect,omitempty"`
 	IncludeDocker                   *bool `json:"include_docker,omitempty"`
+	IncludeFileBasedServiceBindings *bool `json:"include_file_based_service_bindings,omitempty"`
 	IncludeInternetDependent        *bool `json:"include_internet_dependent,omitempty"`
 	IncludeIsolationSegments        *bool `json:"include_isolation_segments,omitempty"`
 	IncludePrivateDockerRegistry    *bool `json:"include_private_docker_registry,omitempty"`
@@ -96,6 +98,7 @@ type testConfig struct {
 	RBuildpackName          *string `json:"r_buildpack_name,omitempty"`
 	RubyBuildpackName       *string `json:"ruby_buildpack_name,omitempty"`
 	StaticFileBuildpackName *string `json:"staticfile_buildpack_name,omitempty"`
+	PythonBuildpackName     *string `json:"python_buildpack_name,omitempty"`
 }
 
 type nullConfig struct {
@@ -142,6 +145,7 @@ type nullConfig struct {
 	RBuildpackName          *string `json:"r_buildpack_name"`
 	RubyBuildpackName       *string `json:"ruby_buildpack_name"`
 	StaticFileBuildpackName *string `json:"staticfile_buildpack_name"`
+	PythonBuildpackName     *string `json:"python_buildpack_name"`
 
 	ReporterConfig *testReporterConfig `json:"reporter_config"`
 
@@ -149,6 +153,7 @@ type nullConfig struct {
 	IncludeContainerNetworking      *bool `json:"include_container_networking"`
 	IncludeDetect                   *bool `json:"include_detect"`
 	IncludeDocker                   *bool `json:"include_docker"`
+	IncludeFileBasedServiceBindings *bool `json:"include_file_based_service_bindings"`
 	IncludeInternetDependent        *bool `json:"include_internet_dependent"`
 	IncludePrivateDockerRegistry    *bool `json:"include_private_docker_registry"`
 	IncludeRouteServices            *bool `json:"include_route_services"`
@@ -275,6 +280,7 @@ var _ = Describe("Config", func() {
 		Expect(config.GetIncludeV3()).To(BeTrue())
 
 		Expect(config.GetIncludeDocker()).To(BeFalse())
+		Expect(config.GetIncludeFileBasedServiceBindings()).To(BeFalse())
 		Expect(config.GetIncludeInternetDependent()).To(BeFalse())
 		Expect(config.GetIncludeRouteServices()).To(BeFalse())
 		Expect(config.GetIncludeContainerNetworking()).To(BeFalse())
@@ -354,6 +360,7 @@ var _ = Describe("Config", func() {
 		Expect(config.GetRBuildpackName()).To(Equal("r_buildpack"))
 		Expect(config.GetRubyBuildpackName()).To(Equal("ruby_buildpack"))
 		Expect(config.GetStaticFileBuildpackName()).To(Equal("staticfile_buildpack"))
+		Expect(config.GetPythonBuildpackName()).To(Equal("python_buildpack"))
 	})
 
 	Context("when all values are null", func() {
@@ -400,10 +407,12 @@ var _ = Describe("Config", func() {
 			Expect(err.Error()).To(ContainSubstring("'nodejs_buildpack_name' must not be null"))
 			Expect(err.Error()).To(ContainSubstring("'ruby_buildpack_name' must not be null"))
 			Expect(err.Error()).To(ContainSubstring("'staticfile_buildpack_name' must not be null"))
+			Expect(err.Error()).To(ContainSubstring("'python_buildpack_name' must not be null"))
 
 			Expect(err.Error()).To(ContainSubstring("'include_apps' must not be null"))
 			Expect(err.Error()).To(ContainSubstring("'include_detect' must not be null"))
 			Expect(err.Error()).To(ContainSubstring("'include_docker' must not be null"))
+			Expect(err.Error()).To(ContainSubstring("'include_file_based_service_bindings' must not be null"))
 			Expect(err.Error()).To(ContainSubstring("'include_internet_dependent' must not be null"))
 			Expect(err.Error()).To(ContainSubstring("'include_private_docker_registry' must not be null"))
 			Expect(err.Error()).To(ContainSubstring("'include_route_services' must not be null"))
@@ -463,6 +472,7 @@ var _ = Describe("Config", func() {
 			testCfg.IncludeDeployments = ptrToBool(true)
 			testCfg.IncludeDetect = ptrToBool(false)
 			testCfg.IncludeDocker = ptrToBool(true)
+			testCfg.IncludeFileBasedServiceBindings = ptrToBool(true)
 			testCfg.IncludeInternetDependent = ptrToBool(true)
 			testCfg.IncludeIsolationSegments = ptrToBool(true)
 			testCfg.IncludePrivateDockerRegistry = ptrToBool(true)
@@ -494,6 +504,7 @@ var _ = Describe("Config", func() {
 			testCfg.RBuildpackName = ptrToString("r_buildpack_override")
 			testCfg.RubyBuildpackName = ptrToString("ruby_buildpack_override")
 			testCfg.StaticFileBuildpackName = ptrToString("staticfile_buildpack_override")
+			testCfg.PythonBuildpackName = ptrToString("python_buildpack_override")
 
 			// These values are set so as not to trigger validation errors associated with the overrides provided above
 			testCfg.PrivateDockerRegistryImage = ptrToString("avoid-validation-errors-by-setting-dummy-value")
@@ -525,6 +536,7 @@ var _ = Describe("Config", func() {
 			Expect(config.GetIncludeDeployments()).To(BeTrue())
 			Expect(config.GetIncludeDetect()).To(BeFalse())
 			Expect(config.GetIncludeDocker()).To(BeTrue())
+			Expect(config.GetIncludeFileBasedServiceBindings()).To(BeTrue())
 			Expect(config.GetIncludeInternetDependent()).To(BeTrue())
 			Expect(config.GetIncludeIsolationSegments()).To(BeTrue())
 			Expect(config.GetIncludePrivateDockerRegistry()).To(BeTrue())
@@ -556,6 +568,7 @@ var _ = Describe("Config", func() {
 			Expect(config.GetRBuildpackName()).To(Equal("r_buildpack_override"))
 			Expect(config.GetRubyBuildpackName()).To(Equal("ruby_buildpack_override"))
 			Expect(config.GetStaticFileBuildpackName()).To(Equal("staticfile_buildpack_override"))
+			Expect(config.GetPythonBuildpackName()).To(Equal("python_buildpack_override"))
 		})
 	})
 
@@ -623,6 +636,32 @@ var _ = Describe("Config", func() {
 			It("returns an error", func() {
 				_, err := cfg.NewCatsConfig(tmpFilePath)
 				Expect(err).To(MatchError("* Invalid configuration: 'public_docker_app_image' must be set to a valid image source"))
+			})
+		})
+	})
+
+	Context("when including catnip_docker_app_image", func() {
+		Context("when image name is set", func() {
+			var image = "some-image"
+			BeforeEach(func() {
+				testCfg.CatnipDockerAppImage = ptrToString(image)
+			})
+
+			It("has the value in the config", func() {
+				config, err := cfg.NewCatsConfig(tmpFilePath)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(config.GetCatnipDockerAppImage()).To(Equal(image))
+			})
+		})
+
+		Context("when image is an empty string", func() {
+			BeforeEach(func() {
+				testCfg.CatnipDockerAppImage = ptrToString("")
+			})
+
+			It("returns an error", func() {
+				_, err := cfg.NewCatsConfig(tmpFilePath)
+				Expect(err).To(MatchError("* Invalid configuration: 'catnip_docker_app_image' must be set to a valid image source"))
 			})
 		})
 	})

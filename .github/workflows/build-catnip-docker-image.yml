@@ -1,0 +1,36 @@
+name: Create and publish a Docker image with the "catnip" app
+
+on:
+  push:
+    branches: ['develop']
+    paths:
+      - 'assets/catnip/**'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: cloudfoundry/catnip-app
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Log in to the Container registry
+        uses: docker/login-action@327cd5a69de6c009b9ce71bce8395f28e651bf99
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@v6.15.0
+        with:
+          context: ./assets/catnip/
+          file: ./assets/catnip/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest

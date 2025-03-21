@@ -39,7 +39,7 @@ in such a way as to impact other tests.
 
 ## Test Setup
 ### Prerequisites for running CATS
-- Install golang >= `1.22`. Set up your golang development environment, per
+- Install golang >= `1.23.0`. Set up your golang development environment, per
   [golang.org](http://golang.org/doc/install).
 - Install the [`cf CLI`](https://github.com/cloudfoundry/cli) >= `8.5.0`. Make
   sure that it is accessible in your `$PATH`.
@@ -53,7 +53,7 @@ in such a way as to impact other tests.
 All `go` dependencies required by CATs
 are vendored in the `vendor` directory.
 
-Make sure to have Golang 1.22+
+Make sure to have Golang 1.23+
 
 In order to update a current dependency to a specific version,
 do the following:
@@ -111,7 +111,7 @@ include_app_syslog_tcp
 * `include_app_syslog_tcp`: Flag to include the app syslog drain over TCP test group.
 * `include_apps`: Flag to include the apps test group.
 * `readiness_health_checks_enabled`: Defaults to `true`. Set to false if you are using an environment without readiness health checks.
-* `include_cnb`: Flag to include tests related to building apps using Cloud Native Buildpacks. Diego must be deployed and the CC API diego_cnb feature flag must be enabled for these tests to pass.
+* `include_cnb`: Flag to include tests related to building apps using Cloud Native Buildpacks. Diego must be deployed and the CC API diego_cnb feature flag must be enabled for these tests to pass. The CF CLI version must be at least v8.9.0.
 * `include_container_networking`: Flag to include tests related to container networking.
 * `credhub_mode`: Valid values are `assisted` or `non-assisted`. [See below](#credhub-modes).
 * `credhub_location`: Location of CredHub instance; default is `https://credhub.service.cf.internal:8844`
@@ -120,6 +120,7 @@ include_app_syslog_tcp
 * `include_deployments`: Flag to include tests for the cloud controller rolling deployments. V3 must also be enabled.
 * `include_detect`: Flag to include tests in the detect group.
 * `include_docker`: Flag to include tests related to running Docker apps on Diego. Diego must be deployed and the CC API diego_docker feature flag must be enabled for these tests to pass.
+* `include_file_based_service_bindings`: Flag to include file-based service binding tests. For details, see [RFC0030](https://github.com/cloudfoundry/community/blob/main/toc/rfc/rfc-0030-add-support-for-file-based-service-binding.md)
 * `include_http2_routing`: Flag to include the HTTP/2 Routing tests.
 * `include_internet_dependent`: Flag to include tests that require the deployment to have internet access.
 * `include_isolation_segments`: Flag to include isolation segment tests.
@@ -173,6 +174,7 @@ include_app_syslog_tcp
 * `r_buildpack_name` [See below](#buildpack-names)
 * `binary_buildpack_name` [See below](#buildpack-names)
 * `cnb_nodejs_buildpack_name` [See below](#buildpack-names)
+* `python_buildpack_name: python_buildpack` [See below](#buildpack-names)
 
 * `include_windows`: Flag to include the tests that run against Windows cells.
 * `use_windows_test_task`: Flag to include the tasks tests on Windows cells. Default is `false`.
@@ -188,6 +190,8 @@ include_app_syslog_tcp
 * `volume_service_create_config`: The JSON configuration that is used when volume service is created.
 * `volume_service_bind_config`: The JSON configuration for the volume service binding configuration.
 
+There is a Golang utility `bin/catsconfiggenerator` that generates a complete config.json on demand from the existing defaults in the code. You can use it and modify the resulting JSON file as desired for your environment.
+
 #### Buildpack Names
 Many tests specify a buildpack when pushing an app, so that on diego the app staging process completes in less time. The default names for the buildpacks are as follows; if you have buildpacks with different names, you can override them by setting different names:
 
@@ -200,6 +204,7 @@ Many tests specify a buildpack when pushing an app, so that on diego the app sta
 * `r_buildpack_name: r_buildpack`
 * `binary_buildpack_name: binary_buildpack`
 * `hwc_buildpack_name: hwc_buildpack`
+* `python_buildpack_name: python_buildpack`
 
 For the Cloud Native Buildpacks lifecycle, you can override them by setting different names:
 
@@ -356,6 +361,7 @@ Test Group Name| Description
 `cnb` | Tests our ability to use cloud native buildpacks.
 `detect` | Tests the ability of the platform to detect the correct buildpack for compiling an application if no buildpack is explicitly specified.
 `docker`| Tests our ability to run docker containers on Diego and that we handle docker metadata correctly.
+`file-based service bindings`| Tests file-based service bindings for a buildpack app, a CNB app and a Docker app.
 `internet_dependent`| Tests the feature of being able to specify a buildpack via a Github URL.  As such, this depends on your Cloud Foundry application containers having access to the Internet.  You should take into account the configuration of the network into which you've deployed your Cloud Foundry, as well as any security group settings applied to application containers.
 `isolation_segments` | This test group requires that Diego be deployed with a minimum of 2 cells. One of those cells must have been deployed with a `placement_tag`. If the deployment has been deployed with a routing isolation segment, `isolation_segment_domain` must also be set. For more information, please refer to the [Isolation Segments documentation](https://docs.cloudfoundry.org/adminguide/isolation-segments.html).
 `route_services` | Tests the [Route Services](https://docs.cloudfoundry.org/services/route-services.html) feature of Cloud Foundry.

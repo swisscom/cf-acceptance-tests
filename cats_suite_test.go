@@ -18,6 +18,7 @@ import (
 	_ "github.com/cloudfoundry/cf-acceptance-tests/credhub"
 	_ "github.com/cloudfoundry/cf-acceptance-tests/detect"
 	_ "github.com/cloudfoundry/cf-acceptance-tests/docker"
+	_ "github.com/cloudfoundry/cf-acceptance-tests/file_based_service_bindings"
 	_ "github.com/cloudfoundry/cf-acceptance-tests/http2_routing"
 	_ "github.com/cloudfoundry/cf-acceptance-tests/internet_dependent"
 	_ "github.com/cloudfoundry/cf-acceptance-tests/isolation_segments"
@@ -127,6 +128,7 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 		Expect(buildpacks).To(ContainSubstring(Config.GetJavaBuildpackName()), "Missing the java buildpack specified in the integration_config.json. There may be other missing buildpacks as well; please double-check your configuration against the buildpacks listed below.")
 		Expect(buildpacks).To(ContainSubstring(Config.GetNodejsBuildpackName()), "Missing the NodeJS buildpack specified in the integration_config.json. There may be other missing buildpacks as well; please double-check your configuration against the buildpacks listed below.")
 		Expect(buildpacks).To(ContainSubstring(Config.GetRubyBuildpackName()), "Missing the ruby buildpack specified in the integration_config.json. There may be other missing buildpacks as well; please double-check your configuration against the buildpacks listed below.")
+		Expect(buildpacks).To(ContainSubstring(Config.GetPythonBuildpackName()), "Missing the python buildpack specified in the integration_config.json. There may be other missing buildpacks as well; please double-check your configuration against the buildpacks listed below.")
 	})
 
 	TestSetup.Setup()

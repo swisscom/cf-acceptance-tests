@@ -13,6 +13,7 @@ type CatsConfig interface {
 	GetIncludeDetect() bool
 	GetIncludeDocker() bool
 	GetIncludeCNB() bool
+	GetIncludeFileBasedServiceBindings() bool
 	GetIncludeInternetDependent() bool
 	GetIncludePrivateDockerRegistry() bool
 	GetIncludeRouteServices() bool
@@ -73,7 +74,9 @@ type CatsConfig interface {
 	GetNamePrefix() string
 	GetNginxBuildpackName() string
 	GetNodejsBuildpackName() string
+	GetCNBGoBuildpackName() string
 	GetCNBNodejsBuildpackName() string
+	GetPythonBuildpackName() string
 	GetPrivateDockerRegistryImage() string
 	GetPrivateDockerRegistryUsername() string
 	GetPrivateDockerRegistryPassword() string
@@ -109,6 +112,7 @@ type CatsConfig interface {
 	SleepTimeoutDuration() time.Duration
 
 	GetPublicDockerAppImage() string
+	GetCatnipDockerAppImage() string
 }
 
 func NewCatsConfig(path string) (CatsConfig, error) {
