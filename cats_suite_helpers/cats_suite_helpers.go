@@ -113,6 +113,7 @@ const (
 	BuildpackLifecycle string = "buildpack"
 	CNBLifecycle              = "CNB"
 	DockerLifecycle           = "Docker"
+	WindowsLifecycle          = "windows"
 )
 
 func FileBasedServiceBindingsDescribe(description string, lifecycle string, callback func()) bool {
@@ -126,6 +127,20 @@ func FileBasedServiceBindingsDescribe(description string, lifecycle string, call
 			}
 			if lifecycle == DockerLifecycle && (!Config.GetIncludeFileBasedServiceBindings() || !Config.GetIncludeDocker()) {
 				Skip(skip_messages.SkipFileBasedServiceBindingsDockerApp)
+			}
+			if lifecycle == WindowsLifecycle && (!Config.GetIncludeFileBasedServiceBindings() || !Config.GetIncludeWindows()) {
+				Skip(skip_messages.SkipFileBasedServiceBindingsWindowsApp)
+			}
+		})
+		Describe(description, callback)
+	})
+}
+
+func IPv6Describe(description string, callback func()) bool {
+	return Describe("[ipv6]", func() {
+		BeforeEach(func() {
+			if !Config.GetIncludeIPv6() {
+				Skip(skip_messages.SkipIPv6)
 			}
 		})
 		Describe(description, callback)
