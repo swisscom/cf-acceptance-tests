@@ -1,7 +1,7 @@
 module github.com/cloudfoundry/cf-acceptance-tests/assets/syslog-drain-listener
 
-go 1.23.0
+go 1.24.0
 
-toolchain go1.23.7
+toolchain go1.24.2
 
-require code.cloudfoundry.org/tlsconfig v0.27.0
+require code.cloudfoundry.org/tlsconfig v0.40.0

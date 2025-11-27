@@ -4,6 +4,7 @@ type Assets struct {
 	AspClassic                 string
 	Catnip                     string
 	CatnipSrc                  string
+	CNBNodeBuildpack           string
 	CredHubEnabledApp          string
 	CredHubServiceBroker       string
 	Dora                       string
@@ -23,6 +24,7 @@ type Assets struct {
 	Python                     string
 	PythonCrashApp             string
 	Nginx                      string
+	NginxIPv6                  string
 	Node                       string
 	CNBNode                    string
 	NodeWithProcfile           string
@@ -51,6 +53,7 @@ func NewAssets() Assets {
 		AspClassic:           "assets/asp-classic",
 		Catnip:               "assets/catnip/bin",
 		CatnipSrc:            "assets/catnip",
+		CNBNodeBuildpack:     "assets/cnb-node-buildpack/nodejs-7.6.2.cnb",
 		CredHubEnabledApp:    "assets/credhub-enabled-app/credhub-enabled-app.jar",
 		CredHubServiceBroker: "assets/credhub-service-broker",
 		Dora:                 "assets/dora",
@@ -70,6 +73,7 @@ func NewAssets() Assets {
 		LoggregatorLoadGenerator:   "assets/loggregator-load-generator",
 		LoggregatorLoadGeneratorGo: "assets/loggregator-load-generator-go",
 		Nginx:                      "assets/nginx",
+		NginxIPv6:                  "assets/nginx-ipv6",
 		Node:                       "assets/node",
 		CNBNode:                    "assets/cnb-node",
 		NodeWithProcfile:           "assets/node-with-procfile",
