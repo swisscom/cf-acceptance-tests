@@ -151,7 +151,7 @@ func assertEventuallyAppCanConnect(client *http.Client, proxyRequestURL string) 
 
 func bindCCSecurityGroup(orgName, spaceName string) string {
 	destinations := []Destination{{
-		IP:       "10.0.0.0/8",
+		IP:       "10.0.0.0/1",
 		Ports:    "9024", // internal cc port
 		Protocol: "tcp",
 	}, {
