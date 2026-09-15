@@ -39,7 +39,7 @@ in such a way as to impact other tests.
 
 ## Test Setup
 ### Prerequisites for running CATS
-- Install golang >= `1.23.0`. Set up your golang development environment, per
+- Install golang >= `1.24.0`. Set up your golang development environment, per
   [golang.org](http://golang.org/doc/install).
 - Install the [`cf CLI`](https://github.com/cloudfoundry/cli) >= `8.5.0`. Make
   sure that it is accessible in your `$PATH`.
@@ -53,7 +53,7 @@ in such a way as to impact other tests.
 All `go` dependencies required by CATs
 are vendored in the `vendor` directory.
 
-Make sure to have Golang 1.23+
+Make sure to have Golang 1.24+
 
 In order to update a current dependency to a specific version,
 do the following:
@@ -105,6 +105,7 @@ include_app_syslog_tcp
 * `admin_password`: Password of the admin user above.
 * `apps_domain`: A shared domain that tests can use to create subdomains that will route to applications also created in the tests, without scheme (HTTP/S) specified.
 * `skip_ssl_validation`: Set to true if using an invalid (e.g. self-signed) cert for traffic routed to your CF instance; this is generally always true for BOSH-Lite deployments of CF.
+* `skip_dns_validation`: Skip DNS validation for CF API and apps domain. Use true for proxy environments. Default:false
 
 ##### Optional parameters:
 `include_*` parameters are used to specify whether to skip tests based on how a deployment is configured.
@@ -134,8 +135,9 @@ include_app_syslog_tcp
 * `comma_delim_asgs_enabled`: Defaults to `false`. Set to true if comma delimited ASG destinations are enabled in the test environment.
 * `include_services`: Flag to include test for the services API.
 * `include_service_instance_sharing`: Flag to include tests for service instance sharing between spaces. `include_services` must be set for these tests to run. The `service_instance_sharing` feature flag must also be enabled for these tests to pass.
+* `include_service_credential_binding_rotation`: Execute tests for multiple service bindings. See [RFC-0040](https://github.com/cloudfoundry/community/blob/main/toc/rfc/rfc-0040-service-binding-rotation.md) for details. This test requires CF CLI v8.18.0 or later. The backend must support at least 2 service bindings per app and service instance.
 * `include_ssh`: Flag to include tests for Diego container ssh feature.
-* `include_sso`: Flag to include the services tests that integrate with Single Sign On. `include_services` must also be set for tests to run.
+* `include_sso`: Flag to include the services tests that integrate with Single Sign On.
 * `include_tasks`: Flag to include the v3 task tests. `include_v3` must also be set for tests to run. The CC API task_creation feature flag must be enabled for these tests to pass.
 * `include_tcp_routing`: Flag to include the TCP Routing tests. These tests are equivalent to the [TCP Routing tests](https://github.com/cloudfoundry/routing-acceptance-tests/blob/master/tcp_routing/tcp_routing_test.go) from the Routing Acceptance Tests.
 * `tcp_domain`: Domain that will be used for apps with TCP routes
@@ -183,7 +185,8 @@ include_app_syslog_tcp
 * `windows_stack`: Windows stack to run tests against.
 
 * `include_service_discovery`: Flag to include test for the service discovery. These tests use `apps.internal` domain, which is the default in `cf-networking-release`. The internal domain is currently not configurable.
-* `stacks`: An array of stacks to test against. Default is `[cflinuxfs4]`.
+* `stacks`: An array of stacks to test against. Currently `cflinuxfs4` and `cflinuxfs5` stacks are supported. Default is `[cflinuxfs4]`.
+* `dotnet_core_asset_paths`: A map from stack name to a directory holding a published dotnet-core app for that stack. CATs ships assets for `cflinuxfs4` and `cflinuxfs5` only; set this to run the dotnet-core detect test against any other stack listed in `stacks`. Without it, that test is skipped for stacks CATs has no asset for. Assets built for the stacks CATs ships take precedence.
 
 * `include_volume_services`: Flag to include the tests for volume services. The following requirements must be met to run this suite: tcp-routing must be deployed.
 * `volume_service_name`: The name of the volume service provided by the volume service broker.

@@ -25,6 +25,7 @@ type CatsConfig interface {
 	GetIncludeServices() bool
 	GetIncludeUserProvidedServices() bool
 	GetIncludeServiceDiscovery() bool
+	GetIncludeServiceCredentialBindingRotation() bool
 	GetIncludeSsh() bool
 	GetIncludeTasks() bool
 	GetIncludeV3() bool
@@ -39,6 +40,7 @@ type CatsConfig interface {
 	GetIncludeVolumeServices() bool
 	GetShouldKeepUser() bool
 	GetSkipSSLValidation() bool
+	GetSkipDNSValidation() bool
 	GetUseExistingUser() bool
 
 	GetAddExistingUserToExistingSpace() bool
@@ -68,6 +70,7 @@ type CatsConfig interface {
 	GetExistingClientSecret() string
 	GetGoBuildpackName() string
 	GetHwcBuildpackName() string
+	GetInternalCCAddress() string
 	GetIsolationSegmentName() string
 	GetIsolationSegmentDomain() string
 	GetIsolationSegmentTCPDomain() string
@@ -90,6 +93,7 @@ type CatsConfig interface {
 	Protocol() string
 
 	GetStacks() []string
+	GetDotnetCoreAssetPaths() map[string]string
 
 	GetUseWindowsTestTask() bool
 	GetUseWindowsContextPath() bool

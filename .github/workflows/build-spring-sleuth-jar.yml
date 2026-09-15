@@ -1,0 +1,49 @@
+name: Build spring-sleuth jar
+
+on:
+  push:
+    branches: ["develop"]
+    paths:
+      - "assets/spring-sleuth/src/**"
+      - "assets/spring-sleuth/pom.xml"
+      - ".github/workflows/build-spring-sleuth-jar.yml"
+  pull_request:
+    branches: ["develop"]
+    paths:
+      - "assets/spring-sleuth/src/**"
+      - "assets/spring-sleuth/pom.xml"
+      - ".github/workflows/build-spring-sleuth-jar.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Build jar with Maven
+        id: build_jar
+        continue-on-error: true
+        working-directory: assets/spring-sleuth
+        run: |
+          mvn package
+
+      - name: Report successful package build
+        if: steps.build_jar.outcome == 'success'
+        run: |
+          echo "mvn package succeeded."
+          echo "Please rebuild and push assets/spring-sleuth/target/spring-sleuth-0.0.1.jar manually in a new PR."
+
+      - name: Report failed package build
+        if: steps.build_jar.outcome == 'failure'
+        run: |
+          echo "mvn package failed."
+          echo "The automatic update requires further code changes before the jar can be rebuilt. Check previous build jar step for details."
+          exit 1

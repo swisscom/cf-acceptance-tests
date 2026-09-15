@@ -27,13 +27,14 @@ type testConfig struct {
 	requiredConfig
 
 	// timeouts
-	DefaultTimeout               *int `json:"default_timeout,omitempty"`
-	CfPushTimeout                *int `json:"cf_push_timeout,omitempty"`
-	LongCurlTimeout              *int `json:"long_curl_timeout,omitempty"`
-	BrokerStartTimeout           *int `json:"broker_start_timeout,omitempty"`
-	AsyncServiceOperationTimeout *int `json:"async_service_operation_timeout,omitempty"`
-	DetectTimeout                *int `json:"detect_timeout,omitempty"`
-	SleepTimeout                 *int `json:"sleep_timeout,omitempty"`
+	DefaultTimeout               *int  `json:"default_timeout,omitempty"`
+	CfPushTimeout                *int  `json:"cf_push_timeout,omitempty"`
+	LongCurlTimeout              *int  `json:"long_curl_timeout,omitempty"`
+	BrokerStartTimeout           *int  `json:"broker_start_timeout,omitempty"`
+	AsyncServiceOperationTimeout *int  `json:"async_service_operation_timeout,omitempty"`
+	DetectTimeout                *int  `json:"detect_timeout,omitempty"`
+	SleepTimeout                 *int  `json:"sleep_timeout,omitempty"`
+	SkipDNSValidation            *bool `json:"skip_dns_validation"`
 
 	TimeoutScale *float64 `json:"timeout_scale,omitempty"`
 
@@ -56,6 +57,8 @@ type testConfig struct {
 	ReporterConfig *testReporterConfig `json:"reporter_config"`
 
 	Stacks *[]string `json:"stacks,omitempty"`
+
+	DotnetCoreAssetPaths map[string]string `json:"dotnet_core_asset_paths,omitempty"`
 
 	VolumeServiceName     *string `json:"volume_service_name,omitempty"`
 	VolumeServicePlanName *string `json:"volume_service_plan_name,omitempty"`
@@ -124,6 +127,7 @@ type nullConfig struct {
 	IsolationSegmentDomain *string `json:"isolation_segment_domain"`
 
 	SkipSSLValidation *bool `json:"skip_ssl_validation"`
+	SkipDNSValidation *bool `json:"skip_dns_validation"`
 
 	ArtifactsDirectory *string `json:"artifacts_directory"`
 
@@ -354,6 +358,7 @@ var _ = Describe("Config", func() {
 		Expect(config.GetCredHubLocation()).To(Equal("https://credhub.service.cf.internal:8844"))
 
 		Expect(config.GetStacks()).To(ConsistOf("cflinuxfs4"))
+		Expect(config.GetDotnetCoreAssetPaths()).To(BeEmpty())
 
 		Expect(config.GetBinaryBuildpackName()).To(Equal("binary_buildpack"))
 		Expect(config.GetGoBuildpackName()).To(Equal("go_buildpack"))
@@ -750,6 +755,42 @@ var _ = Describe("Config", func() {
 		})
 	})
 
+	Context("when providing cflinuxfs5 in the stacks property", func() {
+		BeforeEach(func() {
+			testCfg.Stacks = &[]string{"cflinuxfs5"}
+		})
+
+		It("is loaded into the config", func() {
+			config, err := cfg.NewCatsConfig(tmpFilePath)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(config.GetStacks()).To(Equal([]string{"cflinuxfs5"}))
+		})
+	})
+
+	Context("when providing cflinuxfs4 and cflinuxfs5 in the stacks property", func() {
+		BeforeEach(func() {
+			testCfg.Stacks = &[]string{"cflinuxfs4", "cflinuxfs5"}
+		})
+
+		It("is loaded into the config", func() {
+			config, err := cfg.NewCatsConfig(tmpFilePath)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(config.GetStacks()).To(Equal([]string{"cflinuxfs4", "cflinuxfs5"}))
+		})
+	})
+
+	Context("when providing dotnet_core_asset_paths", func() {
+		BeforeEach(func() {
+			testCfg.DotnetCoreAssetPaths = map[string]string{"my-custom-stack": "assets/dotnet-core/cflinuxfs5"}
+		})
+
+		It("is loaded into the config", func() {
+			config, err := cfg.NewCatsConfig(tmpFilePath)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(config.GetDotnetCoreAssetPaths()).To(Equal(map[string]string{"my-custom-stack": "assets/dotnet-core/cflinuxfs5"}))
+		})
+	})
+
 	Context("when including a reporter config", func() {
 		BeforeEach(func() {
 			reporterConfig := &testReporterConfig{
@@ -944,6 +985,63 @@ var _ = Describe("Config", func() {
 				_, err := cfg.NewCatsConfig(tmpFilePath)
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("'apps_domain' must not be null"))
+			})
+		})
+	})
+
+	Describe("GetSkipDNSValidation", func() {
+		Context("when skip_dns_validation is not set", func() {
+			It("returns false (default)", func() {
+				config, err := cfg.NewCatsConfig(tmpFilePath)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(config.GetSkipDNSValidation()).To(BeFalse())
+			})
+		})
+
+		Context("when skip_dns_validation is set to true", func() {
+			BeforeEach(func() {
+				testCfg.SkipDNSValidation = ptrToBool(true)
+			})
+
+			It("returns true", func() {
+				config, err := cfg.NewCatsConfig(tmpFilePath)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(config.GetSkipDNSValidation()).To(BeTrue())
+			})
+
+			Context("with unresolvable apps domain", func() {
+				BeforeEach(func() {
+					testCfg.AppsDomain = ptrToString("apps.domain.example.com")
+				})
+
+				It("skips DNS lookup for apps domain", func() {
+					config, err := cfg.NewCatsConfig(tmpFilePath)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(config.GetAppsDomain()).To(Equal("apps.domain.example.com"))
+				})
+			})
+		})
+
+		Context("when skip_dns_validation is set to false", func() {
+			BeforeEach(func() {
+				testCfg.SkipDNSValidation = ptrToBool(false)
+			})
+
+			It("returns false", func() {
+				config, err := cfg.NewCatsConfig(tmpFilePath)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(config.GetSkipDNSValidation()).To(BeFalse())
+			})
+			Context("with unresolvable apps domain", func() {
+				BeforeEach(func() {
+					testCfg.AppsDomain = ptrToString("domain.example.com.does-not-exist")
+				})
+
+				It("performs DNS lookup for apps domain", func() {
+					_, err := cfg.NewCatsConfig(tmpFilePath)
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(ContainSubstring("no such host"))
+				})
 			})
 		})
 	})

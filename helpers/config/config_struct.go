@@ -40,6 +40,7 @@ type config struct {
 	IsolationSegmentTCPDomain *string `json:"isolation_segment_tcp_domain"`
 
 	SkipSSLValidation *bool `json:"skip_ssl_validation"`
+	SkipDNSValidation *bool `json:"skip_dns_validation"`
 
 	ArtifactsDirectory *string `json:"artifacts_directory"`
 
@@ -73,35 +74,36 @@ type config struct {
 	VolumeServiceBindConfig   *string `json:"volume_service_bind_config"`
 	VolumeServiceBrokerName   *string `json:"volume_service_broker_name"`
 
-	IncludeAppSyslogTCP             *bool `json:"include_app_syslog_tcp"`
-	IncludeApps                     *bool `json:"include_apps"`
-	IncludeContainerNetworking      *bool `json:"include_container_networking"`
-	IncludeDeployments              *bool `json:"include_deployments"`
-	IncludeDetect                   *bool `json:"include_detect"`
-	IncludeDocker                   *bool `json:"include_docker"`
-	IncludeCNB                      *bool `json:"include_cnb"`
-	IncludeFileBasedServiceBindings *bool `json:"include_file_based_service_bindings"`
-	IncludeInternetDependent        *bool `json:"include_internet_dependent"`
-	IncludeIsolationSegments        *bool `json:"include_isolation_segments"`
-	IncludePrivateDockerRegistry    *bool `json:"include_private_docker_registry"`
-	IncludeRouteServices            *bool `json:"include_route_services"`
-	IncludeRouting                  *bool `json:"include_routing"`
-	IncludeRoutingIsolationSegments *bool `json:"include_routing_isolation_segments"`
-	IncludeSSO                      *bool `json:"include_sso"`
-	IncludeSecurityGroups           *bool `json:"include_security_groups"`
-	IncludeServiceDiscovery         *bool `json:"include_service_discovery"`
-	IncludeServiceInstanceSharing   *bool `json:"include_service_instance_sharing"`
-	IncludeServices                 *bool `json:"include_services"`
-	IncludeUserProvidedServices     *bool `json:"include_user_provided_services"`
-	IncludeSsh                      *bool `json:"include_ssh"`
-	IncludeTCPIsolationSegments     *bool `json:"include_tcp_isolation_segments"`
-	IncludeHTTP2Routing             *bool `json:"include_http2_routing"`
-	IncludeTCPRouting               *bool `json:"include_tcp_routing"`
-	IncludeTasks                    *bool `json:"include_tasks"`
-	IncludeV3                       *bool `json:"include_v3"`
-	IncludeVolumeServices           *bool `json:"include_volume_services"`
-	IncludeZipkin                   *bool `json:"include_zipkin"`
-	IncludeIPv6                     *bool `json:"include_ipv6"`
+	IncludeAppSyslogTCP                     *bool `json:"include_app_syslog_tcp"`
+	IncludeApps                             *bool `json:"include_apps"`
+	IncludeContainerNetworking              *bool `json:"include_container_networking"`
+	IncludeDeployments                      *bool `json:"include_deployments"`
+	IncludeDetect                           *bool `json:"include_detect"`
+	IncludeDocker                           *bool `json:"include_docker"`
+	IncludeCNB                              *bool `json:"include_cnb"`
+	IncludeFileBasedServiceBindings         *bool `json:"include_file_based_service_bindings"`
+	IncludeInternetDependent                *bool `json:"include_internet_dependent"`
+	IncludeIsolationSegments                *bool `json:"include_isolation_segments"`
+	IncludePrivateDockerRegistry            *bool `json:"include_private_docker_registry"`
+	IncludeRouteServices                    *bool `json:"include_route_services"`
+	IncludeRouting                          *bool `json:"include_routing"`
+	IncludeRoutingIsolationSegments         *bool `json:"include_routing_isolation_segments"`
+	IncludeSSO                              *bool `json:"include_sso"`
+	IncludeSecurityGroups                   *bool `json:"include_security_groups"`
+	IncludeServiceDiscovery                 *bool `json:"include_service_discovery"`
+	IncludeServiceInstanceSharing           *bool `json:"include_service_instance_sharing"`
+	IncludeServiceCredentialBindingRotation *bool `json:"include_service_credential_binding_rotation"`
+	IncludeServices                         *bool `json:"include_services"`
+	IncludeUserProvidedServices             *bool `json:"include_user_provided_services"`
+	IncludeSsh                              *bool `json:"include_ssh"`
+	IncludeTCPIsolationSegments             *bool `json:"include_tcp_isolation_segments"`
+	IncludeHTTP2Routing                     *bool `json:"include_http2_routing"`
+	IncludeTCPRouting                       *bool `json:"include_tcp_routing"`
+	IncludeTasks                            *bool `json:"include_tasks"`
+	IncludeV3                               *bool `json:"include_v3"`
+	IncludeVolumeServices                   *bool `json:"include_volume_services"`
+	IncludeZipkin                           *bool `json:"include_zipkin"`
+	IncludeIPv6                             *bool `json:"include_ipv6"`
 
 	CredhubMode         *string `json:"credhub_mode"`
 	CredhubLocation     *string `json:"credhub_location"`
@@ -109,6 +111,12 @@ type config struct {
 	CredhubClientSecret *string `json:"credhub_secret"`
 
 	Stacks *[]string `json:"stacks,omitempty"`
+
+	// DotnetCoreAssetPaths maps a stack to a directory holding a published
+	// dotnet-core app for that stack. It supplements the assets CATs ships
+	// itself, so that deployments running a stack CATs does not know about can
+	// still exercise the dotnet-core detect test.
+	DotnetCoreAssetPaths map[string]string `json:"dotnet_core_asset_paths,omitempty"`
 
 	IncludeWindows        *bool   `json:"include_windows"`
 	UseWindowsTestTask    *bool   `json:"use_windows_test_task"`
@@ -123,9 +131,10 @@ type config struct {
 
 	UnallocatedIPForSecurityGroup *string `json:"unallocated_ip_for_security_group"`
 
-	DynamicASGsEnabled           *bool `json:"dynamic_asgs_enabled"`
-	CommaDelimitedASGsEnabled    *bool `json:"comma_delim_asgs_enabled"`
-	ReadinessHealthChecksEnabled *bool `json:"readiness_health_checks_enabled"`
+	DynamicASGsEnabled           *bool   `json:"dynamic_asgs_enabled"`
+	CommaDelimitedASGsEnabled    *bool   `json:"comma_delim_asgs_enabled"`
+	ReadinessHealthChecksEnabled *bool   `json:"readiness_health_checks_enabled"`
+	InternalCCAddress            *string `json:"internal_cc_address"`
 
 	NamePrefix *string `json:"name_prefix"`
 
@@ -204,6 +213,7 @@ func getDefaults() config {
 	defaults.IncludeTasks = ptrToBool(false)
 	defaults.IncludeZipkin = ptrToBool(false)
 	defaults.IncludeServiceInstanceSharing = ptrToBool(false)
+	defaults.IncludeServiceCredentialBindingRotation = ptrToBool(false)
 	defaults.IncludeHTTP2Routing = ptrToBool(false)
 	defaults.IncludeTCPRouting = ptrToBool(false)
 	defaults.IncludeVolumeServices = ptrToBool(false)
@@ -480,6 +490,9 @@ func validateConfig(config *config) error {
 	if config.IncludeServiceDiscovery == nil {
 		errs = errors.Join(errs, fmt.Errorf("* 'include_service_discovery' must not be null"))
 	}
+	if config.IncludeServiceCredentialBindingRotation == nil {
+		errs = errors.Join(errs, fmt.Errorf("* 'include_service_credential_binding_rotation' must not be null"))
+	}
 	if config.IncludeServices == nil {
 		errs = errors.Join(errs, fmt.Errorf("* 'include_services' must not be null"))
 	}
@@ -556,6 +569,11 @@ func validateApiEndpoint(config *config) error {
 		host = u.Path
 	}
 
+	// Skip DNS validation if configured (useful for HTTP proxy environments)
+	if config.GetSkipDNSValidation() {
+		return nil
+	}
+
 	if _, err = net.LookupHost(host); err != nil {
 		return fmt.Errorf("* Invalid configuration for 'api' <%s>: %s", config.GetApiEndpoint(), err)
 	}
@@ -578,6 +596,11 @@ func validateAppsDomain(config *config) error {
 	if host == "" {
 		// url.Parse misunderstood our convention and treated the hostname as a URL path
 		host = u.Path
+	}
+
+	// Skip DNS validation if configured (useful for HTTP proxy environments)
+	if config.GetSkipDNSValidation() {
+		return nil
 	}
 
 	if _, err = net.LookupHost(madeUpAppHostname); err != nil {
@@ -866,12 +889,27 @@ func (c *config) GetSkipSSLValidation() bool {
 	return *c.SkipSSLValidation
 }
 
+func (c *config) GetSkipDNSValidation() bool {
+	if c.SkipDNSValidation == nil {
+		return false
+	}
+	return *c.SkipDNSValidation
+}
+
 func (c *config) GetArtifactsDirectory() string {
 	return *c.ArtifactsDirectory
 }
 
 func (c *config) GetIsolationSegmentName() string {
 	return *c.IsolationSegmentName
+}
+
+func (c *config) GetInternalCCAddress() string {
+	if c.InternalCCAddress == nil || *c.InternalCCAddress == "" {
+		return "cloud-controller-ng.service.cf.internal"
+	}
+
+	return *c.InternalCCAddress
 }
 
 func (c *config) GetIsolationSegmentDomain() string {
@@ -1084,6 +1122,10 @@ func (c *config) GetIncludeServiceInstanceSharing() bool {
 	return *c.IncludeServiceInstanceSharing
 }
 
+func (c *config) GetIncludeServiceCredentialBindingRotation() bool {
+	return *c.IncludeServiceCredentialBindingRotation
+}
+
 func (c *config) GetIncludeWindows() bool {
 	return *c.IncludeWindows
 }
@@ -1170,6 +1212,10 @@ func (c *config) GetUnallocatedIPForSecurityGroup() string {
 
 func (c *config) GetStacks() []string {
 	return *c.Stacks
+}
+
+func (c *config) GetDotnetCoreAssetPaths() map[string]string {
+	return c.DotnetCoreAssetPaths
 }
 
 func (c *config) GetUseWindowsTestTask() bool {
