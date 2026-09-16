@@ -20,6 +20,7 @@ import (
 	_ "github.com/cloudfoundry/cf-acceptance-tests/docker"
 	_ "github.com/cloudfoundry/cf-acceptance-tests/file_based_service_bindings"
 	_ "github.com/cloudfoundry/cf-acceptance-tests/http2_routing"
+	_ "github.com/cloudfoundry/cf-acceptance-tests/identity_aware_routing"
 	_ "github.com/cloudfoundry/cf-acceptance-tests/internet_dependent"
 	_ "github.com/cloudfoundry/cf-acceptance-tests/ipv6"
 	_ "github.com/cloudfoundry/cf-acceptance-tests/isolation_segments"
@@ -125,6 +126,7 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 		doraFileNames = append(doraFileNames, assets.NewAssets().Dora+"/"+doraFile.Name())
 	}
 	zip := archiver.NewZip()
+	os.Remove(assets.NewAssets().DoraZip)
 	err = zip.Archive(doraFileNames, assets.NewAssets().DoraZip)
 	Expect(err).NotTo(HaveOccurred())
 
