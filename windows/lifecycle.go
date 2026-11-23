@@ -98,7 +98,6 @@ var _ = WindowsDescribe("Application Lifecycle", func() {
 
 		By("scaling it", func() {
 			Expect(cf.Cf("scale", appName, "-i", "2").Wait(Config.CfPushTimeoutDuration())).To(Exit(0))
-			time.Sleep(5 * time.Second)
 			Eventually(func() string {
 				apps := cf.Cf("apps")
 				Expect(apps.Wait()).To(Exit(0))
@@ -122,7 +121,7 @@ var _ = WindowsDescribe("Application Lifecycle", func() {
 			Expect(cf.Cf(
 				"push", appName,
 				"-p", assets.NewAssets().WindowsWebapp,
-				"-c", ".\\webapp.exe",
+				"-c", ".\\bin\\webapp.exe",
 				"-b", Config.GetBinaryBuildpackName(),
 			).Wait(Config.CfPushTimeoutDuration())).To(Exit(0))
 

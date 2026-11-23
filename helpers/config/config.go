@@ -15,6 +15,7 @@ type CatsConfig interface {
 	GetIncludeCNB() bool
 	GetIncludeFileBasedServiceBindings() bool
 	GetIncludeIPv6() bool
+	GetIncludeAsyncRecursiveDelete() bool
 	GetIncludeInternetDependent() bool
 	GetIncludePrivateDockerRegistry() bool
 	GetIncludeRouteServices() bool
@@ -113,6 +114,7 @@ type CatsConfig interface {
 	BrokerStartTimeoutDuration() time.Duration
 	CfPushTimeoutDuration() time.Duration
 	DefaultTimeoutDuration() time.Duration
+	EventuallyPollingIntervalDuration() time.Duration
 	DetectTimeoutDuration() time.Duration
 	GetScaledTimeout(time.Duration) time.Duration
 	LongCurlTimeoutDuration() time.Duration

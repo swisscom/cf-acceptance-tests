@@ -34,6 +34,7 @@ type testConfig struct {
 	AsyncServiceOperationTimeout *int  `json:"async_service_operation_timeout,omitempty"`
 	DetectTimeout                *int  `json:"detect_timeout,omitempty"`
 	SleepTimeout                 *int  `json:"sleep_timeout,omitempty"`
+	EventuallyPollingInterval    *int  `json:"eventually_polling_interval_ms,omitempty"`
 	SkipDNSValidation            *bool `json:"skip_dns_validation"`
 
 	TimeoutScale *float64 `json:"timeout_scale,omitempty"`
@@ -92,6 +93,7 @@ type testConfig struct {
 	IncludeZipkin                   *bool `json:"include_zipkin,omitempty"`
 	IncludeWindows                  *bool `json:"include_windows,omitempty"`
 	IncludeIPv6                     *bool `json:"include_ipv6,omitempty"`
+	IncludeAsyncRecursiveDelete     *bool `json:"include_async_recursive_delete,omitempty"`
 
 	BinaryBuildpackName     *string `json:"binary_buildpack_name,omitempty"`
 	GoBuildpackName         *string `json:"go_buildpack_name,omitempty"`
@@ -138,6 +140,7 @@ type nullConfig struct {
 	DetectTimeout                *int `json:"detect_timeout"`
 	LongCurlTimeout              *int `json:"long_curl_timeout"`
 	SleepTimeout                 *int `json:"sleep_timeout"`
+	EventuallyPollingInterval    *int `json:"eventually_polling_interval_ms"`
 
 	TimeoutScale *float64 `json:"timeout_scale"`
 
@@ -181,6 +184,7 @@ type nullConfig struct {
 	IncludeVolumeServices           *bool `json:"include_volume_services"`
 	IncludeTCPIsolationSegments     *bool `json:"include_tcp_isolation_segments"`
 	IncludeAppSyslogTcp             *bool `json:"include_app_syslog_tcp"`
+	IncludeAsyncRecursiveDelete     *bool `json:"include_async_recursive_delete"`
 
 	CredhubMode         *string `json:"credhub_mode"`
 	CredhubLocation     *string `json:"credhub_location"`
@@ -289,6 +293,7 @@ var _ = Describe("Config", func() {
 		Expect(config.GetIncludeDocker()).To(BeFalse())
 		Expect(config.GetIncludeFileBasedServiceBindings()).To(BeFalse())
 		Expect(config.GetIncludeIPv6()).To(BeFalse())
+		Expect(config.GetIncludeAsyncRecursiveDelete()).To(BeFalse())
 		Expect(config.GetIncludeInternetDependent()).To(BeFalse())
 		Expect(config.GetIncludeRouteServices()).To(BeFalse())
 		Expect(config.GetIncludeContainerNetworking()).To(BeFalse())
@@ -333,6 +338,7 @@ var _ = Describe("Config", func() {
 		Expect(config.BrokerStartTimeoutDuration()).To(Equal(10 * time.Minute))
 		Expect(config.CfPushTimeoutDuration()).To(Equal(8 * time.Minute))
 		Expect(config.DefaultTimeoutDuration()).To(Equal(60 * time.Second))
+		Expect(config.EventuallyPollingIntervalDuration()).To(Equal(250 * time.Millisecond))
 		Expect(config.LongCurlTimeoutDuration()).To(Equal(4 * time.Minute))
 
 		Expect(config.GetScaledTimeout(1)).To(Equal(time.Duration(2)))
@@ -405,6 +411,7 @@ var _ = Describe("Config", func() {
 			Expect(err.Error()).To(ContainSubstring("'detect_timeout' must not be null"))
 			Expect(err.Error()).To(ContainSubstring("'long_curl_timeout' must not be null"))
 			Expect(err.Error()).To(ContainSubstring("'sleep_timeout' must not be null"))
+			Expect(err.Error()).To(ContainSubstring("* 'eventually_polling_interval_ms' must not be null"))
 
 			Expect(err.Error()).To(ContainSubstring("'timeout_scale' must not be null"))
 
@@ -444,6 +451,7 @@ var _ = Describe("Config", func() {
 			Expect(err.Error()).To(ContainSubstring("'include_windows' must not be null"))
 			Expect(err.Error()).To(ContainSubstring("'include_service_discovery' must not be null"))
 			Expect(err.Error()).To(ContainSubstring("'include_app_syslog_tcp' must not be null"))
+			Expect(err.Error()).To(ContainSubstring("'include_async_recursive_delete' must not be null"))
 			Expect(err.Error()).To(ContainSubstring("'public_docker_app_image' must not be null"))
 			Expect(err.Error()).To(ContainSubstring("'private_docker_registry_image' must not be null"))
 			Expect(err.Error()).To(ContainSubstring("'private_docker_registry_username' must not be null"))
@@ -466,6 +474,7 @@ var _ = Describe("Config", func() {
 	Context("when values with default are overriden", func() {
 		BeforeEach(func() {
 			testCfg.DefaultTimeout = ptrToInt(12)
+			testCfg.EventuallyPollingInterval = ptrToInt(1000)
 			testCfg.CfPushTimeout = ptrToInt(34)
 			testCfg.LongCurlTimeout = ptrToInt(56)
 			testCfg.BrokerStartTimeout = ptrToInt(78)
@@ -483,6 +492,7 @@ var _ = Describe("Config", func() {
 			testCfg.IncludeDocker = ptrToBool(true)
 			testCfg.IncludeFileBasedServiceBindings = ptrToBool(true)
 			testCfg.IncludeIPv6 = ptrToBool(true)
+			testCfg.IncludeAsyncRecursiveDelete = ptrToBool(true)
 			testCfg.IncludeInternetDependent = ptrToBool(true)
 			testCfg.IncludeIsolationSegments = ptrToBool(true)
 			testCfg.IncludePrivateDockerRegistry = ptrToBool(true)
@@ -531,6 +541,7 @@ var _ = Describe("Config", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(config.DefaultTimeoutDuration()).To(Equal(12 * time.Second))
+			Expect(config.EventuallyPollingIntervalDuration()).To(Equal(time.Second))
 			Expect(config.CfPushTimeoutDuration()).To(Equal(34 * time.Second))
 			Expect(config.LongCurlTimeoutDuration()).To(Equal(56 * time.Second))
 			Expect(config.BrokerStartTimeoutDuration()).To(Equal(78 * time.Second))
@@ -548,6 +559,7 @@ var _ = Describe("Config", func() {
 			Expect(config.GetIncludeDocker()).To(BeTrue())
 			Expect(config.GetIncludeFileBasedServiceBindings()).To(BeTrue())
 			Expect(config.GetIncludeIPv6()).To(BeTrue())
+			Expect(config.GetIncludeAsyncRecursiveDelete()).To(BeTrue())
 			Expect(config.GetIncludeInternetDependent()).To(BeTrue())
 			Expect(config.GetIncludeIsolationSegments()).To(BeTrue())
 			Expect(config.GetIncludePrivateDockerRegistry()).To(BeTrue())
@@ -827,7 +839,64 @@ var _ = Describe("Config", func() {
 		})
 	})
 
+	Context("when including an eventually polling interval", func() {
+		Context("when the interval is one millisecond", func() {
+			BeforeEach(func() {
+				testCfg.EventuallyPollingInterval = ptrToInt(1)
+			})
+
+			It("uses the configured interval", func() {
+				config, err := cfg.NewCatsConfig(tmpFilePath)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(config.EventuallyPollingIntervalDuration()).To(Equal(time.Millisecond))
+			})
+		})
+
+		Context("when the interval is zero or less", func() {
+			It("returns an error", func() {
+				for _, interval := range []int{0, -1} {
+					testCfg.EventuallyPollingInterval = ptrToInt(interval)
+					path := writeConfigFile(&testCfg)
+					DeferCleanup(os.Remove, path)
+					_, err := cfg.NewCatsConfig(path)
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(ContainSubstring("* 'eventually_polling_interval_ms' must be greater than zero"))
+				}
+			})
+		})
+
+		Context("when the interval is at or above the maximum", func() {
+			It("accepts the maximum and rejects values above it", func() {
+				testCfg.EventuallyPollingInterval = ptrToInt(9223372036854)
+				path := writeConfigFile(&testCfg)
+				DeferCleanup(os.Remove, path)
+				_, err := cfg.NewCatsConfig(path)
+				Expect(err).NotTo(HaveOccurred())
+
+				testCfg.EventuallyPollingInterval = ptrToInt(9223372036855)
+				path = writeConfigFile(&testCfg)
+				DeferCleanup(os.Remove, path)
+				_, err = cfg.NewCatsConfig(path)
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("* 'eventually_polling_interval_ms' must not exceed 9223372036854"))
+			})
+		})
+	})
+
 	Context("when including a timeout scale", func() {
+		Context("when also including an eventually polling interval", func() {
+			BeforeEach(func() {
+				testCfg.TimeoutScale = ptrToFloat(2)
+				testCfg.EventuallyPollingInterval = ptrToInt(500)
+			})
+
+			It("does not scale the polling interval", func() {
+				config, err := cfg.NewCatsConfig(tmpFilePath)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(config.EventuallyPollingIntervalDuration()).To(Equal(500 * time.Millisecond))
+			})
+		})
+
 		Context("when the timeout scale is zero", func() {
 			BeforeEach(func() {
 				testCfg.TimeoutScale = ptrToFloat(0.0)

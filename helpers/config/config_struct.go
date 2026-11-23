@@ -49,6 +49,7 @@ type config struct {
 	BrokerStartTimeout           *int `json:"broker_start_timeout"`
 	CfPushTimeout                *int `json:"cf_push_timeout"`
 	DefaultTimeout               *int `json:"default_timeout"`
+	EventuallyPollingInterval    *int `json:"eventually_polling_interval_ms"`
 	DetectTimeout                *int `json:"detect_timeout"`
 	LongCurlTimeout              *int `json:"long_curl_timeout"`
 	SleepTimeout                 *int `json:"sleep_timeout"`
@@ -106,6 +107,7 @@ type config struct {
 	IncludeV3                               *bool   `json:"include_v3"`
 	IncludeVolumeServices                   *bool   `json:"include_volume_services"`
 	IncludeZipkin                           *bool   `json:"include_zipkin"`
+	IncludeAsyncRecursiveDelete             *bool   `json:"include_async_recursive_delete"`
 	IncludeIPv6                             *bool   `json:"include_ipv6"`
 
 	CredhubMode         *string `json:"credhub_mode"`
@@ -223,6 +225,7 @@ func getDefaults() config {
 	defaults.IncludeTCPRouting = ptrToBool(false)
 	defaults.IncludeVolumeServices = ptrToBool(false)
 	defaults.IncludeIPv6 = ptrToBool(false)
+	defaults.IncludeAsyncRecursiveDelete = ptrToBool(false)
 
 	defaults.IncludeWindows = ptrToBool(false)
 	defaults.UseWindowsContextPath = ptrToBool(false)
@@ -248,6 +251,7 @@ func getDefaults() config {
 	defaults.BrokerStartTimeout = ptrToInt(300)
 	defaults.CfPushTimeout = ptrToInt(240)
 	defaults.DefaultTimeout = ptrToInt(30)
+	defaults.EventuallyPollingInterval = ptrToInt(250)
 	defaults.DetectTimeout = ptrToInt(300)
 	defaults.LongCurlTimeout = ptrToInt(120)
 	defaults.SleepTimeout = ptrToInt(30)
@@ -375,6 +379,11 @@ func validateConfig(config *config) error {
 	}
 
 	err = validateTimeoutScale(config)
+	if err != nil {
+		errs = errors.Join(errs, err)
+	}
+
+	err = validateEventuallyPollingInterval(config)
 	if err != nil {
 		errs = errors.Join(errs, err)
 	}
@@ -552,6 +561,9 @@ func validateConfig(config *config) error {
 	}
 	if config.IncludeIPv6 == nil {
 		errs = errors.Join(errs, fmt.Errorf("* 'include_ipv6' must not be null"))
+	}
+	if config.IncludeAsyncRecursiveDelete == nil {
+		errs = errors.Join(errs, fmt.Errorf("* 'include_async_recursive_delete' must not be null"))
 	}
 
 	return errs
@@ -841,6 +853,22 @@ func validateTimeoutScale(config *config) error {
 	return nil
 }
 
+func validateEventuallyPollingInterval(config *config) error {
+	if config.EventuallyPollingInterval == nil {
+		return fmt.Errorf("* 'eventually_polling_interval_ms' must not be null")
+	}
+
+	if *config.EventuallyPollingInterval <= 0 {
+		return fmt.Errorf("* 'eventually_polling_interval_ms' must be greater than zero")
+	}
+
+	if *config.EventuallyPollingInterval > 9223372036854 {
+		return fmt.Errorf("* 'eventually_polling_interval_ms' must not exceed 9223372036854")
+	}
+
+	return nil
+}
+
 func load(path string, config *config) error {
 	err := loadConfigFromPath(path, config)
 	if err != nil {
@@ -867,6 +895,10 @@ func (c config) GetScaledTimeout(timeout time.Duration) time.Duration {
 
 func (c *config) DefaultTimeoutDuration() time.Duration {
 	return c.GetScaledTimeout(time.Duration(*c.DefaultTimeout) * time.Second)
+}
+
+func (c *config) EventuallyPollingIntervalDuration() time.Duration {
+	return time.Duration(*c.EventuallyPollingInterval) * time.Millisecond
 }
 
 func (c *config) LongCurlTimeoutDuration() time.Duration {
@@ -1132,6 +1164,10 @@ func (c *config) GetIncludeCredhubNonAssisted() bool {
 
 func (c *config) GetIncludeIPv6() bool {
 	return *c.IncludeIPv6
+}
+
+func (c *config) GetIncludeAsyncRecursiveDelete() bool {
+	return *c.IncludeAsyncRecursiveDelete
 }
 
 func (c *config) GetCredHubBrokerClientCredential() string {

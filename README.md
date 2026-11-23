@@ -133,6 +133,7 @@ include_app_syslog_tcp
 * `include_security_groups`: Flag to include tests for security groups. [See below](#container-networking-and-application-security-groups)
 * `dynamic_asgs_enabled`: Defaults to `true`. Set to false if dynamic ASGs are disabled in the test environment.
 * `comma_delim_asgs_enabled`: Defaults to `false`. Set to true if comma delimited ASG destinations are enabled in the test environment.
+* `include_async_recursive_delete`: Flag to include tests that verify async recursive delete behavior (async unbind on `cf delete-service` and `cf delete <app> -f`). Requires an async-capable service broker and CAPI >= 1.242.0 with `temporary_enable_async_recursive_delete` enabled.
 * `include_services`: Flag to include test for the services API.
 * `include_service_instance_sharing`: Flag to include tests for service instance sharing between spaces. `include_services` must be set for these tests to run. The `service_instance_sharing` feature flag must also be enabled for these tests to pass.
 * `include_service_credential_binding_rotation`: Execute tests for multiple service bindings. See [RFC-0040](https://github.com/cloudfoundry/community/blob/main/toc/rfc/rfc-0040-service-binding-rotation.md) for details. This test requires CF CLI v8.18.0 or later. The backend must support at least 2 service bindings per app and service instance.
@@ -153,6 +154,7 @@ include_app_syslog_tcp
 * `existing_user_password`: Password for the existing user to use.
 * `artifacts_directory`: If set, `cf` CLI trace output from test runs will be captured in files and placed in this directory. [See below](#capturing-test-output) for more.
 * `default_timeout`: Default time (in seconds) to wait for polling assertions that wait for asynchronous results.
+* `eventually_polling_interval_ms`: Polling interval, in milliseconds, for Gomega `Eventually` assertions without an explicit interval, including waits for every `cf` CLI command. Defaults to `250`. Shorter intervals increase polling, including `cf curl` requests. Set to `1000` to restore the previous default if CATS runs cause API pressure, throttling, or elevated latency on your foundation. This value is not scaled by `timeout_scale`.
 * `cf_push_timeout`: Default time (in seconds) to wait for `cf push` commands to succeed.
 * `long_curl_timeout`: Default time (in seconds) to wait for assertions that `curl` slow endpoints of test applications.
 * `broker_start_timeout` (only relevant for `services` test group): Time (in seconds) to wait for service broker test app to start.
@@ -346,6 +348,28 @@ To see verbose output from `ginkgo`, use the `-v` flag.
 ```
 
 You can of course combine the `-v` flag with the `--procs=N` flag.
+
+##### Command tracing
+
+Set `CATS_TRACE=1` (or `CATS_TRACE=true`) to print a timing summary at the end
+of the run. It reports the slowest specs (with the non-`cf` "other" time gap),
+time grouped by `cf` command verb, the slowest individual commands, and repeated
+commands (the same command run many times, e.g. a test app pushed repeatedly).
+The block is framed by `===CATS-TRACE===` markers so it is easy to grep out of
+a build log and compare across environments.
+
+Optional: `CATS_TRACE_TOP=N` caps how many rows each detail table prints
+(default 20). Aggregate figures are always computed over all commands.
+
+By default the per-spec command detail (a JSON blob per spec) is only printed
+when a spec fails or when Ginkgo's `-v` flag is used. This keeps CI output
+compact while still surfacing detail on failures. To see per-spec command
+detail for every spec locally, run with `ginkgo -v`.
+
+**Warning:** the trace records `cf` command arguments. User passwords and the
+CredHub broker client secret are redacted automatically; all other argument
+values are stored as-is. Only enable tracing in environments where that is
+acceptable.
 
 ##### Overall Test Timeout Setting
 From Ginkgo 2.0, the default timeout for the entire test has been changed to 1 hour (refer to: [Ginkgo 2.0 Migration Guide - Timeout Behavior](https://onsi.github.io/ginkgo/MIGRATING_TO_V2#timeout-behavior)).

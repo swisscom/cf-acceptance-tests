@@ -10,6 +10,7 @@ import (
 
 	. "github.com/cloudfoundry/cf-acceptance-tests/cats_suite_helpers"
 	"github.com/cloudfoundry/cf-acceptance-tests/helpers/assets"
+	"github.com/cloudfoundry/cf-acceptance-tests/helpers/cfcmdtrace"
 	"github.com/mholt/archiver/v3"
 
 	_ "github.com/cloudfoundry/cf-acceptance-tests/app_syslog_tcp"
@@ -67,6 +68,10 @@ func TestCATS(t *testing.T) {
 		rc.JUnitReport = filepath.Join(Config.GetArtifactsDirectory(), fmt.Sprintf("junit-%s-%d.xml", "CATS", GinkgoParallelProcess()))
 	}
 
+	if cfcmdtrace.Enabled() {
+		cfcmdtrace.Enable(Config.GetNamePrefix())
+	}
+
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "CATS", rc)
 }
@@ -79,6 +84,7 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	PauseOutputInterception()
 	fmt.Fprintf(GinkgoWriter, "Running CATs with CF CLI version %s\n", installedVersion)
 	ResumeOutputInterception()
+	fmt.Fprintf(os.Stdout, "Using Eventually polling interval %s\n", Config.EventuallyPollingIntervalDuration())
 
 	Expect(ParseRawCliVersionString(installedVersion).AtLeast(ParseRawCliVersionString(minCliVersion))).To(BeTrue(), "CLI version "+minCliVersion+" is required")
 
@@ -116,6 +122,56 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 
 		err = windowsBuildCmd.Run()
 		Expect(err).NotTo(HaveOccurred())
+
+		loadGenBuildCmd := exec.Command("go", "build", "-o", "bin/loggregator-load-generator.exe")
+		loadGenBuildCmd.Dir = "assets/loggregator-load-generator-go"
+		loadGenBuildCmd.Env = append(os.Environ(),
+			"CGO_ENABLED=0",
+			"GOOS=windows",
+			"GOARCH=amd64",
+		)
+		loadGenBuildCmd.Stdout = GinkgoWriter
+		loadGenBuildCmd.Stderr = GinkgoWriter
+
+		err = loadGenBuildCmd.Run()
+		Expect(err).NotTo(HaveOccurred())
+
+		webappBuildCmd := exec.Command("go", "build", "-o", "bin/webapp.exe")
+		webappBuildCmd.Dir = "assets/webapp"
+		webappBuildCmd.Env = append(os.Environ(),
+			"CGO_ENABLED=0",
+			"GOOS=windows",
+			"GOARCH=amd64",
+		)
+		webappBuildCmd.Stdout = GinkgoWriter
+		webappBuildCmd.Stderr = GinkgoWriter
+
+		err = webappBuildCmd.Run()
+		Expect(err).NotTo(HaveOccurred())
+	}
+
+	routingBuildCmd := exec.Command("go", "build", "-o", "bin/hello-routing")
+	routingBuildCmd.Dir = "assets/hello-routing"
+	routingBuildCmd.Env = append(os.Environ(),
+		"CGO_ENABLED=0",
+		"GOOS=linux",
+		"GOARCH=amd64",
+	)
+	routingBuildCmd.Stdout = GinkgoWriter
+	routingBuildCmd.Stderr = GinkgoWriter
+	Expect(routingBuildCmd.Run()).To(Succeed())
+
+	if Config.GetIncludeAppSyslogTcp() {
+		listenerBuildCmd := exec.Command("go", "build", "-o", "bin/syslog-drain-listener")
+		listenerBuildCmd.Dir = "assets/syslog-drain-listener"
+		listenerBuildCmd.Env = append(os.Environ(),
+			"CGO_ENABLED=0",
+			"GOOS=linux",
+			"GOARCH=amd64",
+		)
+		listenerBuildCmd.Stdout = GinkgoWriter
+		listenerBuildCmd.Stderr = GinkgoWriter
+		Expect(listenerBuildCmd.Run()).To(Succeed())
 	}
 
 	doraFiles, err := os.ReadDir(assets.NewAssets().Dora)
@@ -133,7 +189,7 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	return []byte{}
 }, func([]byte) {
 	SetDefaultEventuallyTimeout(Config.DefaultTimeoutDuration())
-	SetDefaultEventuallyPollingInterval(1 * time.Second)
+	SetDefaultEventuallyPollingInterval(Config.EventuallyPollingIntervalDuration())
 
 	TestSetup = workflowhelpers.NewTestSuiteSetup(Config)
 
@@ -156,6 +212,9 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 var _ = SynchronizedAfterSuite(func() {
 	if TestSetup != nil {
 		TestSetup.Teardown()
+	}
+	if cfcmdtrace.Enabled() {
+		AddReportEntry("cfcmdtrace-suite", ReportEntryVisibilityFailureOrVerbose, cfcmdtrace.DrainSuiteSetup())
 	}
 }, func() {
 	os.Remove(assets.NewAssets().DoraZip)
